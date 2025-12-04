@@ -1,11 +1,29 @@
 <script>
-	import favicon from '$lib/assets/favicon.svg';
+    import { supabase } from '$lib/supabaseClient';
+    import { goto } from '$app/navigation';
+    export let data;
 
-	let { children } = $props();
+    // user pobieramy z serwera
+    let user = data.session?.user || null;
+
+    async function logout() {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            alert("Błąd podczas wylogowywania: " + error.message);
+            return;
+        }
+        goto('/login');
+    }
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
+<nav class="navbar">
+    <div class="logo">Moja Apka</div>
 
-{@render children()}
+    {#if user}
+        <button on:click={logout}>Wyloguj</button>
+    {:else}
+        <button on:click={() => goto('/login')}>Zaloguj się</button>
+    {/if}
+</nav>
+
+<slot />
