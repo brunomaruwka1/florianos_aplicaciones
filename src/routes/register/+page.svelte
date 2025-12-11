@@ -1,84 +1,38 @@
 <script>
     import { goto } from '$app/navigation';
 
-    function goTrainer() {
-        goto('/register-trainer');
-    }
-
-    function goParent() {
-        goto('/register-parent');
-    }
-
-    function goStudent() {
-        goto('/register-student');
-    }
+    const goTrainer = () => goto('/register-trainer');
+    const goParent = () => goto('/register-parent');
+    const goStudent = () => goto('/register-student');
 </script>
 
-<div class="container">
-    <h1>Wybierz typ rejestracji</h1>
-    <p>Z kim zakładasz konto w systemie?</p>
+<div class="max-w-md mx-auto mt-20 bg-white/80 backdrop-blur shadow-lg border border-gray-200 rounded-2xl p-8 text-center">
 
-    <div class="buttons">
-        <button on:click={goTrainer} class="trainer">
+    <h1 class="text-2xl font-bold mb-2 p-5">Wybierz typ rejestracji</h1>
+
+    <div class="flex flex-col gap-4">
+
+        <button
+            on:click={goTrainer}
+            class="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition"
+        >
             Rejestracja trenera
         </button>
 
-        <button on:click={goParent} class="parent">
+        <button
+            on:click={goParent}
+            class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow transition"
+        >
             Rejestracja rodzica
         </button>
 
-        <button on:click={goStudent} class="student">
-            Rejestracja podopiecznego 
+        <button
+            on:click={goStudent}
+            class="w-full py-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow transition"
+        >
+            Rejestracja podopiecznego
         </button>
+
     </div>
+
 </div>
-
-<style>
-    .container {
-        max-width: 480px;
-        margin: 60px auto;
-        padding: 32px;
-        border-radius: 12px;
-        background: #ffffff;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.08);
-        text-align: center;
-        font-family: sans-serif;
-    }
-
-    h1 { 
-        margin-bottom: 10px; 
-        font-size: 24px; 
-        font-weight: 600;
-    }
-
-    p { 
-        margin-bottom: 25px; 
-        color: #666; 
-    }
-
-    .buttons { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 15px; 
-    }
-
-    button {
-        padding: 14px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: 0.2s;
-        color: white;
-    }
-
-    .trainer { background: #3b82f6; }
-    .trainer:hover { background: #2563eb; }
-
-    .parent { background: #10b981; }
-    .parent:hover { background: #059669; }
-
-    .student { background: #f59e0b; }
-    .student:hover { background: #d97706; }
-</style>

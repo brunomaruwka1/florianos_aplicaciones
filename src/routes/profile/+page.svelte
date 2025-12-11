@@ -1,71 +1,119 @@
 <script>
-    export let data;
     import { goto } from '$app/navigation';
+    export let data;
 
     const role = data.role;
 
-    function goToGroups() {
-        goto('/groups');
-    }
+    // definicja kafelków wg roli
+    const trainerCards = [
+        {
+            title: "Moje grupy",
+            desc: "Zarządzaj swoimi grupami.",
+            icon: "👥",
+            link: "/groups"
+        },
+        {
+            title: "Moi podopieczni",
+            desc: "Przeglądaj i dodawaj podopiecznych.",
+            icon: "🧒",
+            link: "/students"
+        },
+        {
+            title: "Moje zajęcia",
+            desc: "Harmonogram i edycja zajęć.",
+            icon: "📅",
+            link: "/classes"
+        },
+    ];
 
-    function goToStudents() {
-        goto('/students');
-    }
+    const parentCards = [
+        {
+            title: "Moje dzieci",
+            desc: "Zarządzaj kontami swoich dzieci.",
+            icon: "👨‍👧‍👦",
+            link: "/parents/children"
+        },
+        {
+            title: "Moje zajęcia",
+            desc: "Zobacz swoje zajęcia.",
+            icon: "📘",
+            link: "/classes/my"
+        },
+        {
+            title: "Zajęcia moich dzieci",
+            desc: "Przeglądaj zajęcia swoich dzieci.",
+            icon: "🏫",
+            link: "/classes/children"
+        },
+    ];
 
-    function goToClasses() {
-        goto('/classes');
-    }
-
-    function goToMyChildren() {
-        goto('/parents/children');
-    }
-
-    function goToMyClasses() {
-        goto('/classes/my');
-    }
-
-    function goToChildrenClasses() {
-        goto('/classes/children');
-    }
+    const studentCards = [
+        {
+            title: "Moje zajęcia",
+            desc: "Harmonogram zajęć.",
+            icon: "📅",
+            link: "/classes"
+        },
+        {
+            title: "Moja grupa",
+            desc: "Zobacz swoją grupę.",
+            icon: "👤",
+            link: "/groups/my"
+        },
+    ];
 </script>
 
-<h1>Mój profil</h1>
-<p>Wybierz, co chcesz zrobić:</p>
+<div class="max-w-6xl mx-auto px-4 py-10">
 
-<div class="menu">
+    <h1 class="text-3xl font-bold mb-6">Mój profil</h1>
 
-    {#if role === 'trainer'}
-        <button on:click={goToGroups}>Moje grupy</button>
-        <button on:click={goToStudents}>Moi podopieczni</button>
-        <button on:click={goToClasses}>Moje zajęcia</button>
+    <p class="text-gray-600 mb-6">
+        Wybierz jedną z dostępnych opcji.
+    </p>
 
-    {:else if role === 'parent'}
-        <button on:click={goToMyChildren}>Moje dzieci</button>
-        <button on:click={goToMyClasses}>Moje zajęcia</button>
-        <button on:click={goToChildrenClasses}>Zajęcia moich dzieci</button>
+    <!-- GRID -->
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-3">
 
-    {:else if role === 'student'}
-        <button on:click={goToClasses}>Moje zajęcia</button>
-        <button on:click={() => goto('/groups/my')}>Moja grupa</button>
+        {#if role === 'trainer'}
+            {#each trainerCards as c}
+                <div
+                    on:click={() => goto(c.link)}
+                    class="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer transition"
+                >
+                    <div class="text-5xl mb-3">{c.icon}</div>
+                    <h2 class="text-xl font-semibold">{c.title}</h2>
+                    <p class="text-gray-600 mt-1">{c.desc}</p>
+                </div>
+            {/each}
 
-    {:else}
-        <p>Nieznana rola użytkownika.</p>
-    {/if}
+        {:else if role === 'parent'}
+            {#each parentCards as c}
+                <div
+                    on:click={() => goto(c.link)}
+                    class="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer transition"
+                >
+                    <div class="text-5xl mb-3">{c.icon}</div>
+                    <h2 class="text-xl font-semibold">{c.title}</h2>
+                    <p class="text-gray-600 mt-1">{c.desc}</p>
+                </div>
+            {/each}
+
+        {:else if role === 'student'}
+            {#each studentCards as c}
+                <div
+                    on:click={() => goto(c.link)}
+                    class="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer transition"
+                >
+                    <div class="text-5xl mb-3">{c.icon}</div>
+                    <h2 class="text-xl font-semibold">{c.title}</h2>
+                    <p class="text-gray-600 mt-1">{c.desc}</p>
+                </div>
+            {/each}
+
+        {:else}
+            <p>Nieznana rola użytkownika.</p>
+        {/if}
+
+    </div>
 
 </div>
-
-<style>
-    h1 { margin-bottom: 20px; }
-    .menu { display: flex; flex-direction: column; gap: 12px; max-width: 300px; }
-    button {
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        background: #3b82f6;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-    button:hover { background: #2563eb; }
-</style>

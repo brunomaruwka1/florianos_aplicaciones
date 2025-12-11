@@ -1,14 +1,26 @@
-export async function POST({ cookies }) {
-	// wyczyszczenie tokenów supabase z cookies
-	cookies.set('sb-access-token', '', {
-		path: '/',
-		maxAge: 0
-	});
+// src/routes/api/logout/+server.js
+import { json } from "@sveltejs/kit";
 
-	cookies.set('sb-refresh-token', '', {
-		path: '/',
-		maxAge: 0
-	});
+export async function POST({ locals, cookies }) {
+    const supabase = locals.supabase;
 
-	return new Response(null, { status: 204 });
+    // wylogowanie po stronie Supabase
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+        return json({ error: error.message }, { status: 400 });
+    }
+
+    // Kasujemy ciasteczka
+    cookies.set("sb-access-token", "", {
+        path: "/",
+        maxAge: 0
+    });
+
+    cookies.set("sb-refresh-token", "", {
+        path: "/",
+        maxAge: 0
+    });
+
+    return json({ message: "Logged out" }, { status: 200 });
 }

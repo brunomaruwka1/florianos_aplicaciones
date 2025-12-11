@@ -21,19 +21,7 @@
     color: #555;
   }
 
-  nav {
-    display: flex;
-    justify-content: flex-end;
-    gap: 20px;
-    padding: 20px 40px;
-  }
-
-  a {
-    text-decoration: none;
-    font-weight: bold;
-    color: #3b82f6;
-    cursor: pointer;
-  }
+  
 
   button {
     margin-top: 20px;
@@ -51,10 +39,6 @@
   }
 </style>
 
-<nav>
-  <a on:click={() => goto('/login')}>Logowanie</a>
-  <a on:click={() => goto('/register')}>Rejestracja</a>
-</nav>
 
 <div class="container">
   <h1>Witaj w aplikacji treningowej</h1>

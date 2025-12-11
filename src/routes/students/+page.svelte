@@ -1,6 +1,9 @@
 <script>
     export let data;
 
+    console.log("STUDENTS DATA:", data.students);
+    console.log("GROUPS DATA:", data.groups);
+
     let students = data.students || [];
     let groups = data.groups || [];
 
@@ -23,7 +26,6 @@
             return;
         }
 
-        // dodanie nowego ucznia do listy
         students = [data.student, ...students];
 
         first_name = '';
@@ -33,31 +35,96 @@
     }
 </script>
 
-<h1>Moi podopieczni</h1>
+<div class="max-w-6xl mx-auto px-4 py-10">
 
-<form on:submit|preventDefault={addStudent} class="form">
-    <input placeholder="Imię" bind:value={first_name} required />
-    <input placeholder="Nazwisko" bind:value={last_name} required />
-    <input type="date" bind:value={birth_date} required />
+    <h1 class="text-3xl font-bold mb-6">Moi podopieczni</h1>
 
-    <select bind:value={group_id} required>
-        <option value="" disabled selected>Wybierz grupę</option>
-        {#each groups as g}
-            <option value={g.id}>{g.name}</option>
-        {/each}
-    </select>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    <button type="submit">Dodaj podopiecznego</button>
-</form>
+        <!-- LEWA KOLUMNA — FORMULARZ -->
+        <div class="bg-white p-6 rounded-2xl shadow border border-gray-200 h-fit sticky top-6">
 
-<ul>
-    {#each students as s}
-        <li>{s.first_name} {s.last_name} → {new Date(s.birth_date).toLocaleDateString()}</li>
-    {/each}
-</ul>
+            <h2 class="text-xl font-semibold mb-4">Dodaj podopiecznego</h2>
 
-<style>
-    .form { display: flex; flex-direction: column; gap: 10px; max-width: 300px; margin-bottom: 20px; }
-    input, select, button { padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #3b82f6; color: white; border: none; cursor: pointer; }
-</style>
+            <form on:submit|preventDefault={addStudent} class="flex flex-col gap-4">
+                
+                <input 
+                    placeholder="Imię"
+                    bind:value={first_name}
+                    required
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+
+                <input 
+                    placeholder="Nazwisko"
+                    bind:value={last_name}
+                    required
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+
+                <input 
+                    type="date"
+                    bind:value={birth_date}
+                    required
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+
+                <select
+                    bind:value={group_id}
+                    required
+                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                    <option value="" disabled selected>Wybierz grupę</option>
+
+                    {#each groups as g}
+                        <option value={g.id}>{g.name}</option>
+                    {/each}
+                </select>
+
+                <button 
+                    type="submit"
+                    class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition w-fit"
+                >
+                    Dodaj podopiecznego
+                </button>
+            </form>
+
+        </div>
+
+        <!-- PRAWA KOLUMNA — LISTA STUDENTÓW -->
+        <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+
+            {#if students.length}
+
+                {#each students as s}
+
+                    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
+
+                        <h3 class="text-lg font-bold mb-1">
+                            {s.first_name} {s.last_name}
+                        </h3>
+
+                        <p class="text-gray-600 mb-1">
+                            Data urodzenia: 
+                            <span class="font-medium">
+                                {new Date(s.birth_date).toLocaleDateString()}
+                            </span>
+                        </p>
+
+                          <p>Grupa: {s.group_id ? s.group_id.name : 'Brak'}</p>
+
+
+                    </div>
+
+                {/each}
+
+            {:else}
+
+                <p class="text-gray-600">Brak podopiecznych.</p>
+
+            {/if}
+
+        </div>
+
+    </div>
+</div>
