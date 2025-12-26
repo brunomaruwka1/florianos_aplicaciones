@@ -4,7 +4,7 @@
 
     const role = data.role;
 
-    // definicja kafelków wg roli
+    // ===== KAFELKI TRENERA =====
     const trainerCards = [
         {
             title: "Moje grupy",
@@ -26,12 +26,20 @@
         },
     ];
 
+    // ===== KAFELKI RODZICA =====
     const parentCards = [
         {
             title: "Moje dzieci",
-            desc: "Zarządzaj kontami swoich dzieci.",
+            desc: "Lista Twoich podopiecznych.",
             icon: "👨‍👧‍👦",
             link: "/parents/children"
+        },
+        {
+            title: "Dodaj dziecko",
+            desc: "Dodaj dziecko poniżej 13 lat.",
+            icon: "➕",
+            link: "/register-child",
+            highlight: true
         },
         {
             title: "Moje zajęcia",
@@ -41,12 +49,13 @@
         },
         {
             title: "Zajęcia moich dzieci",
-            desc: "Przeglądaj zajęcia swoich dzieci.",
+            desc: "Harmonogram zajęć dzieci.",
             icon: "🏫",
             link: "/classes/children"
         },
     ];
 
+    // ===== KAFELKI STUDENTA =====
     const studentCards = [
         {
             title: "Moje zajęcia",
@@ -65,14 +74,13 @@
 
 <div class="max-w-6xl mx-auto px-4 py-10">
 
-    <h1 class="text-3xl font-bold mb-6">Mój profil</h1>
-
-    <p class="text-gray-600 mb-6">
+    <h1 class="text-3xl font-bold mb-2">Mój profil</h1>
+    <p class="text-gray-600 mb-8">
         Wybierz jedną z dostępnych opcji.
     </p>
 
-    <!-- GRID -->
-    <div class="grid gap-6 grid-cols-1 md:grid-cols-3">
+    <!-- GRID KAFELKÓW -->
+    <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
 
         {#if role === 'trainer'}
             {#each trainerCards as c}
@@ -90,11 +98,17 @@
             {#each parentCards as c}
                 <div
                     on:click={() => goto(c.link)}
-                    class="p-6 bg-white border rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 cursor-pointer transition"
+                    class={`p-6 rounded-2xl shadow-sm cursor-pointer transition
+                        ${c.highlight
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-white border hover:shadow-lg hover:-translate-y-1'
+                        }`}
                 >
                     <div class="text-5xl mb-3">{c.icon}</div>
                     <h2 class="text-xl font-semibold">{c.title}</h2>
-                    <p class="text-gray-600 mt-1">{c.desc}</p>
+                    <p class={`${c.highlight ? 'text-green-100' : 'text-gray-600'} mt-1`}>
+                        {c.desc}
+                    </p>
                 </div>
             {/each}
 

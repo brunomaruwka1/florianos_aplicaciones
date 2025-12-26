@@ -1,4 +1,6 @@
 <script>
+    import { goto } from '$app/navigation'; // NEW
+
     export let data;
     let groups = data.groups;
 
@@ -73,7 +75,6 @@
     }
 </script>
 
-
 <div class="max-w-6xl mx-auto px-4 py-10">
 
     <h1 class="text-3xl font-bold mb-6">Moje grupy</h1>
@@ -112,8 +113,7 @@
 
         </div>
 
-
-        <!-- PRAWA KOLUMNA — LISTA GRUP (scrollowalna) -->
+        <!-- PRAWA KOLUMNA — LISTA GRUP -->
         <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
 
             {#if groups.length}
@@ -124,27 +124,25 @@
 
                             <input
                                 bind:value={editName}
-                                placeholder="Nazwa grupy"
-                                class="mb-3 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                class="mb-3 w-full px-4 py-2 border rounded-lg"
                             />
 
                             <textarea
                                 bind:value={editDescription}
-                                placeholder="Opis grupy"
-                                class="mb-3 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                class="mb-3 w-full px-4 py-2 border rounded-lg"
                             ></textarea>
 
                             <div class="flex gap-3">
                                 <button
                                     on:click={() => saveEdit(group.id)}
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg"
                                 >
                                     Zapisz
                                 </button>
 
                                 <button
                                     on:click={cancelEditing}
-                                    class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                                    class="px-4 py-2 bg-gray-300 rounded-lg"
                                 >
                                     Anuluj
                                 </button>
@@ -152,7 +150,13 @@
 
                         {:else}
 
-                            <h3 class="text-lg font-bold mb-1">{group.name}</h3>
+                            <!-- KLIKALNA NAZWA GRUPY -->
+                            <h3
+                                class="text-lg font-bold mb-1 cursor-pointer text-blue-600 hover:underline"
+                                on:click={() => goto(`/groups/${group.id}`)}   
+                            >
+                                {group.name}
+                            </h3>
 
                             <p class="text-gray-600 mb-3">
                                 {group.description || "Brak opisu"}
@@ -162,24 +166,32 @@
                                 Utworzone: {new Date(group.created_at).toLocaleString()}
                             </p>
 
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 flex-wrap">
+
+                                <!-- NOWY PRZYCISK -->
+                                <button
+                                    on:click={() => goto(`/groups/${group.id}`)}
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                                >
+                                    Podopieczni
+                                </button>
+
                                 <button
                                     on:click={() => startEditing(group)}
-                                    class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+                                    class="px-4 py-2 bg-yellow-500 text-white rounded-lg"
                                 >
                                     Edytuj
                                 </button>
 
                                 <button
                                     on:click={() => deleteGroup(group.id)}
-                                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                                    class="px-4 py-2 bg-red-500 text-white rounded-lg"
                                 >
                                     Usuń
                                 </button>
                             </div>
 
                         {/if}
-
                     </div>
                 {/each}
 

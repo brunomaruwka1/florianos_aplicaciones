@@ -1,130 +1,127 @@
 <script>
-    export let data;
-
-    console.log("STUDENTS DATA:", data.students);
-    console.log("GROUPS DATA:", data.groups);
-
-    let students = data.students || [];
-    let groups = data.groups || [];
+    import { onMount } from 'svelte';
 
     let first_name = '';
     let last_name = '';
     let birth_date = '';
-    let group_id = '';
+    let error = '';
+
+    let students = [];
+    let loading = true;
+
+    async function loadStudents() {
+        loading = true;
+        error = '';
+
+        const res = await fetch('/api/students');
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.error('LOAD students error:', data);
+            error = data.error || 'Błąd pobierania studentów';
+        } else {
+            students = data.students || [];
+        }
+
+        loading = false;
+    }
 
     async function addStudent() {
+        error = '';
+
         const res = await fetch('/api/students', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ first_name, last_name, birth_date, group_id })
+            body: JSON.stringify({
+                first_name,
+                last_name,
+                birth_date
+            })
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.error || "Błąd przy dodawaniu podopiecznego");
+            error = data.error || 'Błąd podczas dodawania';
             return;
         }
 
-        students = [data.student, ...students];
-
+        // reset formularza
         first_name = '';
         last_name = '';
         birth_date = '';
-        group_id = '';
+
+        // odśwież listę
+        loadStudents();
     }
+
+    onMount(loadStudents);
 </script>
 
-<div class="max-w-6xl mx-auto px-4 py-10">
+<div class="max-w-md mx-auto mt-16 bg-white p-6 rounded-2xl shadow border border-gray-200">
 
-    <h1 class="text-3xl font-bold mb-6">Moi podopieczni</h1>
+    <h1 class="text-2xl font-bold mb-6">
+        Dodaj podopiecznego (TEST)
+    </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <form
+        on:submit|preventDefault={addStudent}
+        class="flex flex-col gap-4"
+    >
+        <input
+            bind:value={first_name}
+            placeholder="Imię"
+            required
+            class="px-4 py-2 border rounded-lg"
+        />
 
-        <!-- LEWA KOLUMNA — FORMULARZ -->
-        <div class="bg-white p-6 rounded-2xl shadow border border-gray-200 h-fit sticky top-6">
+        <input
+            bind:value={last_name}
+            placeholder="Nazwisko"
+            required
+            class="px-4 py-2 border rounded-lg"
+        />
 
-            <h2 class="text-xl font-semibold mb-4">Dodaj podopiecznego</h2>
+        <input
+            type="date"
+            bind:value={birth_date}
+            required
+            class="px-4 py-2 border rounded-lg"
+        />
 
-            <form on:submit|preventDefault={addStudent} class="flex flex-col gap-4">
-                
-                <input 
-                    placeholder="Imię"
-                    bind:value={first_name}
-                    required
-                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
+        <button
+            type="submit"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+            Dodaj
+        </button>
 
-                <input 
-                    placeholder="Nazwisko"
-                    bind:value={last_name}
-                    required
-                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
+        {#if error}
+            <p class="text-red-600 text-sm">{error}</p>
+        {/if}
+    </form>
 
-                <input 
-                    type="date"
-                    bind:value={birth_date}
-                    required
-                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
+    <hr class="my-6" />
 
-                <select
-                    bind:value={group_id}
-                    required
-                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                    <option value="" disabled selected>Wybierz grupę</option>
+    <h2 class="text-xl font-semibold mb-3">
+        Istniejący podopieczni
+    </h2>
 
-                    {#each groups as g}
-                        <option value={g.id}>{g.name}</option>
-                    {/each}
-                </select>
-
-                <button 
-                    type="submit"
-                    class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition w-fit"
-                >
-                    Dodaj podopiecznego
-                </button>
-            </form>
-
-        </div>
-
-        <!-- PRAWA KOLUMNA — LISTA STUDENTÓW -->
-        <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-
-            {#if students.length}
-
-                {#each students as s}
-
-                    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
-
-                        <h3 class="text-lg font-bold mb-1">
-                            {s.first_name} {s.last_name}
-                        </h3>
-
-                        <p class="text-gray-600 mb-1">
-                            Data urodzenia: 
-                            <span class="font-medium">
-                                {new Date(s.birth_date).toLocaleDateString()}
-                            </span>
-                        </p>
-
-                          <p>Grupa: {s.group_id ? s.group_id.name : 'Brak'}</p>
-
-
+    {#if loading}
+        <p>Ładowanie…</p>
+    {:else if students.length === 0}
+        <p>Brak studentów w bazie.</p>
+    {:else}
+        <ul class="space-y-2">
+            {#each students as s}
+                <li class="p-3 border rounded-lg">
+                    <strong>{s.first_name} {s.last_name}</strong>
+                    <div class="text-sm text-gray-500">
+                        {s.birth_date}
                     </div>
+                </li>
+            {/each}
+        </ul>
+    {/if}
 
-                {/each}
-
-            {:else}
-
-                <p class="text-gray-600">Brak podopiecznych.</p>
-
-            {/if}
-
-        </div>
-
-    </div>
 </div>
