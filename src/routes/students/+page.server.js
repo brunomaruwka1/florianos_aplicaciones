@@ -14,12 +14,12 @@ export async function load({ locals }) {
     console.error('ERROR fetching groups:', groupsErr);
     // możesz też zwrócić error(...) jeśli chcesz przerwać ładowanie strony
   }
-
-  // pobieramy uczniów — Z RELACJĄ group_id(id, name)
+  
   const { data: students, error: studentsErr } = await supabase
     .from('students')
-    .select('*, group_id(id, name)')
+    .select('id, first_name, last_name, birth_date, created_at')
     .order('created_at', { ascending: false });
+
 
   if (studentsErr) {
     console.error('ERROR fetching students:', studentsErr);

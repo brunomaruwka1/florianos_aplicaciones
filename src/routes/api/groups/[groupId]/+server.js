@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 
 export async function PATCH({ locals, request, params }) {
     const supabase = locals.supabase;
-    const { id } = params;
+    const { groupId } = params;
 
     if (!locals.session) {
         return json({ error: 'Musisz być zalogowany' }, { status: 401 });
@@ -15,33 +15,32 @@ export async function PATCH({ locals, request, params }) {
         return json({ error: "Pole 'name' jest wymagane" }, { status: 400 });
     }
 
-    // aktualizacja grupy
     const { data, error } = await supabase
         .from('groups')
         .update({ name, description })
-        .eq('id', id)
-        .select();
+        .eq('id', groupId)
+        .select()
+        .single();
 
     if (error) {
         return json({ error: error.message }, { status: 400 });
     }
 
-    return json({ message: 'Grupa zaktualizowana!', group: data[0] });
+    return json({ message: 'Grupa zaktualizowana!', group: data });
 }
 
 export async function DELETE({ locals, params }) {
     const supabase = locals.supabase;
-    const { id } = params;
+    const { groupId } = params;
 
     if (!locals.session) {
         return json({ error: 'Musisz być zalogowany' }, { status: 401 });
     }
 
-    // usunięcie grupy
     const { error } = await supabase
         .from('groups')
         .delete()
-        .eq('id', id);
+        .eq('id', groupId);
 
     if (error) {
         return json({ error: error.message }, { status: 400 });

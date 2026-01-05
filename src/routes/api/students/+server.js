@@ -45,7 +45,8 @@ export async function POST({ locals, request }) {
         .insert({
             first_name,
             last_name,
-            birth_date
+            birth_date,
+            created_by: authData.user.id
         })
         .select()
         .single();

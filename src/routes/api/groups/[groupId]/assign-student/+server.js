@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 
 export async function POST({ params, locals, request }) {
   const supabase = locals.supabase;
-  const groupId = params.id;
+  const groupId = params.groupId;
 
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) {
