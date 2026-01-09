@@ -30,16 +30,9 @@
     const parentCards = [
         {
             title: "Moje dzieci",
-            desc: "Lista Twoich podopiecznych.",
+            desc: "Lista Twoich dzieci.",
             icon: "👨‍👧‍👦",
-            link: "/parents/children"
-        },
-        {
-            title: "Dodaj dziecko",
-            desc: "Dodaj dziecko poniżej 13 lat.",
-            icon: "➕",
-            link: "/register-child",
-            highlight: true
+            link: "/parent/children"
         },
         {
             title: "Moje zajęcia",
