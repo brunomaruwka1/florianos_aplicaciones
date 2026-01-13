@@ -9,6 +9,11 @@
   let existingStudentId = '';
   let error = '';
 
+  // 🆕 zaproszenie token
+  let inviteToken = '';
+  let inviteError = '';
+  let inviteSuccess = '';
+
   // ➕ nowy student + przypisanie do tej grupy
   async function addNewStudent() {
     error = '';
@@ -51,10 +56,9 @@
   async function removeFromGroup(studentId) {
     if (!confirm('Usunąć podopiecznego z tej grupy?')) return;
 
-    const res = await fetch(
-      `/api/groups/${group.id}/students/${studentId}`,
-      { method: 'DELETE' }
-    );
+    const res = await fetch(`/api/groups/${group.id}/students/${studentId}`, {
+      method: 'DELETE'
+    });
 
     const data = await res.json();
     if (!res.ok) {
@@ -63,6 +67,37 @@
     }
 
     location.reload();
+  }
+
+  /* --------------------------------------------------
+   * 🆕 TOKEN INVITE
+   * -------------------------------------------------- */
+
+  async function generateInvite() {
+    inviteError = '';
+    inviteSuccess = '';
+    inviteToken = '';
+
+    const res = await fetch(`/api/groups/${group.id}/invite`, {
+      method: 'POST'
+    });
+
+    const out = await res.json();
+
+    if (!res.ok) {
+      inviteError = out.error || 'Błąd generowania zaproszenia';
+      return;
+    }
+
+    inviteToken = out.invite.token;
+    inviteSuccess = 'Token został wygenerowany ✅';
+  }
+
+  async function copyInviteToken() {
+    if (!inviteToken) return;
+
+    await navigator.clipboard.writeText(inviteToken);
+    inviteSuccess = 'Token skopiowany ✅';
   }
 </script>
 
@@ -97,17 +132,19 @@
                 </p>
               </div>
 
-              
-              <button class="p-2 text-gray-500 hover:text-red-600 transition" on:click={() => removeFromGroup(s.id)}>
+              <button
+                class="p-2 text-gray-500 hover:text-red-600 transition"
+                on:click={() => removeFromGroup(s.id)}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg"
-                    class="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2">
+                  class="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2">
                   <path stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
+                    stroke-linejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
                 </svg>
               </button>
 
@@ -119,6 +156,42 @@
 
     <!-- ➕ ZARZĄDZANIE -->
     <div class="space-y-6">
+
+      <!-- 🆕 TOKEN INVITE -->
+      <div class="bg-white p-6 rounded-2xl shadow border">
+        <h3 class="font-semibold mb-3">Zaproszenie do grupy (token)</h3>
+
+        <button
+          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+          on:click={generateInvite}
+        >
+          Wygeneruj token
+        </button>
+
+        {#if inviteToken}
+          <div class="mt-4 p-3 bg-gray-50 border rounded-lg">
+            <div class="text-sm text-gray-600 mb-1">Token:</div>
+            <div class="flex items-center justify-between gap-3">
+              <code class="text-sm break-all">{inviteToken}</code>
+
+              <button
+                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                on:click={copyInviteToken}
+              >
+                Kopiuj
+              </button>
+            </div>
+          </div>
+        {/if}
+
+        {#if inviteError}
+          <p class="text-red-600 text-sm mt-3">{inviteError}</p>
+        {/if}
+
+        {#if inviteSuccess}
+          <p class="text-green-600 text-sm mt-3">{inviteSuccess}</p>
+        {/if}
+      </div>
 
       <!-- NOWY STUDENT -->
       <div class="bg-white p-6 rounded-2xl shadow border">

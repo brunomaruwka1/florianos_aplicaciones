@@ -1,96 +1,162 @@
 import { json } from '@sveltejs/kit';
 
+function validateDayOfWeek(d) {
+  const n = Number(d);
+  return Number.isInteger(n) && n >= 0 && n <= 6;
+}
+
 export async function GET({ locals }) {
-    const supabase = locals.supabase;
+  const supabase = locals.supabase;
 
-    const { data, error } = await supabase
-        .from('classes')
-        .select('*, group_id(id, name)')
-        .order('day_of_week', { ascending: true });
+  // ✅ auth
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
 
-    if (error) return json({ error: error.message }, { status: 500 });
-    return json(data, { status: 200 });
+  // ✅ pobierz zajęcia — tylko te do których trener ma dostęp (RLS)
+  const { data, error } = await supabase
+    .from('classes')
+    .select(`
+      id,
+      day_of_week,
+      start_time,
+      end_time,
+      created_at,
+      group_id:groups (
+        id,
+        name
+      )
+    `)
+    .order('day_of_week', { ascending: true })
+    .order('start_time', { ascending: true });
+
+  if (error) {
+    console.error('GET classes error:', error);
+    return json({ error: error.message }, { status: 400 });
+  }
+
+  return json(data || [], { status: 200 });
 }
 
 export async function POST({ locals, request }) {
-    const supabase = locals.supabase;
+  const supabase = locals.supabase;
 
-    const { data, error: userError } = await supabase.auth.getUser();
-    if (userError || !data.user) return json({ error: 'Musisz być zalogowany' }, { status: 401 });
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
 
-    const userId = data.user.id;
-    const body = await request.json();
-    const { group_id, day_of_week, start_time, end_time } = body;
+  const body = await request.json();
+  const { group_id, day_of_week, start_time, end_time } = body;
 
-    if (!group_id || day_of_week === undefined || !start_time)
-        return json({ error: 'Brak wymaganych danych' }, { status: 400 });
+  if (!group_id || !validateDayOfWeek(day_of_week) || !start_time) {
+    return json({ error: 'Brak wymaganych danych' }, { status: 400 });
+  }
 
-    const { data: newClass, error } = await supabase
-        .from('classes')
-        .insert({
-            group_id,
-            day_of_week,
-            start_time,
-            end_time: end_time ?? null,
-            created_by: userId
-        })
-        .select();
+  const { data, error } = await supabase
+    .from('classes')
+    .insert({
+      group_id,
+      day_of_week: Number(day_of_week),
+      start_time,
+      end_time: end_time || null,
+      created_by: user.id
+    })
+    .select(`
+      id,
+      day_of_week,
+      start_time,
+      end_time,
+      created_at,
+      group_id:groups (
+        id,
+        name
+      )
+    `)
+    .single();
 
-    if (error) return json({ error: error.message }, { status: 400 });
-    return json({ message: 'Zajęcia dodane!', class: newClass[0] }, { status: 201 });
+  if (error) {
+    console.error('POST classes error:', error);
+    return json({ error: error.message }, { status: 400 });
+  }
+
+  return json({ message: 'Zajęcia dodane', class: data }, { status: 201 });
 }
 
-// Edycja zajęć
 export async function PATCH({ locals, request }) {
-    const supabase = locals.supabase;
+  const supabase = locals.supabase;
 
-    const { data, error: e1 } = await supabase.auth.getUser();
-    if (e1 || !data.user) return json({ error: "Brak dostępu" }, { status: 401 });
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
 
-    const userId = data.user.id;
-    const body = await request.json();
+  const body = await request.json();
+  const { id, group_id, day_of_week, start_time, end_time } = body;
 
-    const { id, group_id, day_of_week, start_time, end_time } = body;
+  if (!id || !group_id || !validateDayOfWeek(day_of_week) || !start_time) {
+    return json({ error: 'Brak wymaganych danych' }, { status: 400 });
+  }
 
-    if (!id) return json({ error: "Brak id" }, { status: 400 });
+  const { data, error } = await supabase
+    .from('classes')
+    .update({
+      group_id,
+      day_of_week: Number(day_of_week),
+      start_time,
+      end_time: end_time || null
+    })
+    .eq('id', id)
+    .select(`
+      id,
+      day_of_week,
+      start_time,
+      end_time,
+      created_at,
+      group_id:groups (
+        id,
+        name
+      )
+    `)
+    .single();
 
-    const { data: updated, error } = await supabase
-        .from("classes")
-        .update({
-            group_id,
-            day_of_week,
-            start_time,
-            end_time
-        })
-        .eq("id", id)
-        .eq("created_by", userId)
-        .select("*, group_id(id, name)");
+  if (error) {
+    console.error('PATCH classes error:', error);
+    return json({ error: error.message }, { status: 400 });
+  }
 
-    if (error) return json({ error: error.message }, { status: 400 });
-
-    return json({ class: updated[0] });
+  return json({ message: 'Zajęcia zaktualizowane', class: data }, { status: 200 });
 }
 
-
-// Usuwanie zajęć
 export async function DELETE({ locals, request }) {
-    const supabase = locals.supabase;
-    const { data, error: userError } = await supabase.auth.getUser();
-    if (userError || !data.user) return json({ error: 'Musisz być zalogowany' }, { status: 401 });
+  const supabase = locals.supabase;
 
-    const userId = data.user.id;
-    const body = await request.json();
-    const { id } = body;
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
 
-    if (!id) return json({ error: 'Brak id zajęć' }, { status: 400 });
+  const body = await request.json();
+  const { id } = body;
 
-    const { data: deleted, error } = await supabase
-        .from('classes')
-        .delete()
-        .eq('id', id)
-        .eq('created_by', userId)
-        .select();
+  if (!id) {
+    return json({ error: 'Brak id' }, { status: 400 });
+  }
 
-    if (error) return json({ error: error.message }, { status: 400 });
-    return json({ message: 'Zajęcia usunięte', class: deleted[0] });
+  const { error } = await supabase
+    .from('classes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('DELETE classes error:', error);
+    return json({ error: error.message }, { status: 400 });
+  }
+
+  return json({ message: 'Zajęcia usunięte' }, { status: 200 });
 }

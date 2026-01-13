@@ -1,47 +1,109 @@
 import { json } from '@sveltejs/kit';
 
 /**
- * GET — lista studentów zalogowanego użytkownika
- * (na razie tylko created_by — OK na tym etapie)
+ * GET
+ * - trainer → lista studentów powiązanych przez trainer_student
+ * - parent → lista studentów utworzonych przez rodzica (created_by)
  */
 export async function GET({ locals }) {
   const supabase = locals.supabase;
 
-  const { data: authData, error: authErr } = await supabase.auth.getUser();
-
-  if (authErr || !authData?.user) {
-    return json({ error: 'Brak autoryzacji' }, { status: 401 });
-  }
-
-  const userId = authData.user.id;
-
-  const { data, error } = await supabase
-    .from('students')
-    .select('id, first_name, last_name, birth_date, created_at')
-    .eq('created_by', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('GET students error:', error);
-    return json({ error: error.message }, { status: 400 });
-  }
-
-  return json({ students: data }, { status: 200 });
-}
-
-/**
- * POST — dodanie studenta
- * - parent → tylko student
- * - trainer → student + relacja trainer_student
- */
-export async function POST({ locals, request }) {
-  const supabase = locals.supabase;
-
+  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
   if (authErr || !user) {
     return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
+
+  // ✅ role
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profileErr || !profile?.role) {
+    return json({ error: 'Brak profilu/roli użytkownika' }, { status: 400 });
+  }
+
+  /* --------------------------------------------------
+   * ✅ TRAINER → trainer_student join students
+   * -------------------------------------------------- */
+  if (profile.role === 'trainer') {
+    const { data, error } = await supabase
+      .from('trainer_student')
+      .select(`
+        student:students (
+          id,
+          first_name,
+          last_name,
+          birth_date,
+          created_at
+        )
+      `)
+      .eq('trainer_id', user.id)
+      .order('created_at', { foreignTable: 'students', ascending: false });
+
+    if (error) {
+      console.error('GET trainer students error:', error);
+      return json({ error: error.message }, { status: 400 });
+    }
+
+    const students = (data || [])
+      .map((row) => row.student)
+      .filter(Boolean);
+
+    return json({ students }, { status: 200 });
+  }
+
+  /* --------------------------------------------------
+   * ✅ PARENT → created_by
+   * -------------------------------------------------- */
+  if (profile.role === 'parent') {
+    const { data, error } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, birth_date, created_at')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('GET parent students error:', error);
+      return json({ error: error.message }, { status: 400 });
+    }
+
+    return json({ students: data || [] }, { status: 200 });
+  }
+
+  // student nie ma endpointu "students list"
+  return json({ students: [] }, { status: 200 });
+}
+
+/**
+ * POST — dodanie studenta
+ * - parent → tylko student
+ * - trainer → student + relacja trainer_student (ZAWSZE)
+ */
+export async function POST({ locals, request }) {
+  const supabase = locals.supabase;
+
+  // ✅ auth
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
+
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
+
+  // ✅ rola
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profileErr || !profile?.role) {
+    return json({ error: 'Brak profilu/roli użytkownika' }, { status: 400 });
   }
 
   const { first_name, last_name, birth_date } = await request.json();
@@ -50,9 +112,7 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak wymaganych danych' }, { status: 400 });
   }
 
-  /* --------------------------------------------------
-   * 1️⃣ DODAJEMY STUDENTA
-   * -------------------------------------------------- */
+  // 1️⃣ student
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .insert({
@@ -69,42 +129,28 @@ export async function POST({ locals, request }) {
     return json({ error: studentErr.message }, { status: 400 });
   }
 
-  /* --------------------------------------------------
-   * 2️⃣ SPRAWDZAMY CZY USER JEST TRENEREM
-   * trainers.profile_id = auth.uid()
-   * -------------------------------------------------- */
-  const { data: trainer, error: trainerErr } = await supabase
-    .from('trainers')
-    .select('id')
-    .eq('profile_id', user.id)
-    .maybeSingle(); // ✅ brak błędu jeśli to parent
-
-  if (trainerErr) {
-    console.error('Trainer check error:', trainerErr);
-  }
-
-  /* --------------------------------------------------
-   * 3️⃣ JEŚLI TRENER → TWORZYMY RELACJĘ
-   * UWAGA: używamy trainers.id
-   * -------------------------------------------------- */
-  if (trainer) {
-    const {
-      data: relation,
-      error: relationErr
-    } = await supabase
+  // 2️⃣ jeśli trener -> relacja trainer_student
+  if (profile.role === 'trainer') {
+    const { error: relationErr } = await supabase
       .from('trainer_student')
-      .insert({
-        trainer_id: trainer.id, // 🔥 KLUCZOWA ZMIANA
-        student_id: student.id
-      })
-      .select()
-      .single();
-
-    console.log('TRAINER_STUDENT RESULT:', relation, relationErr);
+      .upsert(
+        {
+          trainer_id: user.id, // ✅ profiles.id
+          student_id: student.id
+        },
+        { onConflict: 'trainer_id,student_id' }
+      );
 
     if (relationErr) {
-      console.error('Relation insert error:', relationErr);
-      // nie cofamy studenta — relacja jest opcjonalna
+      console.error('trainer_student upsert error:', relationErr);
+      return json(
+        {
+          error:
+            'Student dodany, ale nie udało się utworzyć relacji trener–student: ' +
+            relationErr.message
+        },
+        { status: 400 }
+      );
     }
   }
 

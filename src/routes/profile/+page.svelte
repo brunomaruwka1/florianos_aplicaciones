@@ -60,7 +60,7 @@
             title: "Moja grupa",
             desc: "Zobacz swoją grupę.",
             icon: "👤",
-            link: "/groups/my"
+            link: "/my-groups"
         },
     ];
 </script>
