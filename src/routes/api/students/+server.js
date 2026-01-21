@@ -27,21 +27,26 @@ export async function GET({ locals }) {
     return json({ error: 'Brak profilu/roli użytkownika' }, { status: 400 });
   }
 
+  const role = profile.role;
+
   /* --------------------------------------------------
-   * ✅ TRAINER → trainer_student join students
+   * TRAINER → trainer_student -> students
    * -------------------------------------------------- */
-  if (profile.role === 'trainer') {
+  if (role === 'trainer') {
     const { data, error } = await supabase
       .from('trainer_student')
-      .select(`
+      .select(
+        `
         student:students (
           id,
           first_name,
           last_name,
           birth_date,
-          created_at
+          created_at,
+          profile_id
         )
-      `)
+      `
+      )
       .eq('trainer_id', user.id)
       .order('created_at', { foreignTable: 'students', ascending: false });
 
@@ -50,6 +55,7 @@ export async function GET({ locals }) {
       return json({ error: error.message }, { status: 400 });
     }
 
+    // ✅ spłaszczamy + filtrujemy null
     const students = (data || [])
       .map((row) => row.student)
       .filter(Boolean);
@@ -58,12 +64,12 @@ export async function GET({ locals }) {
   }
 
   /* --------------------------------------------------
-   * ✅ PARENT → created_by
+   * PARENT → created_by
    * -------------------------------------------------- */
-  if (profile.role === 'parent') {
+  if (role === 'parent') {
     const { data, error } = await supabase
       .from('students')
-      .select('id, first_name, last_name, birth_date, created_at')
+      .select('id, first_name, last_name, birth_date, created_at, profile_id')
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
 
@@ -75,14 +81,14 @@ export async function GET({ locals }) {
     return json({ students: data || [] }, { status: 200 });
   }
 
-  // student nie ma endpointu "students list"
+  // student nie ma listy studentów
   return json({ students: [] }, { status: 200 });
 }
 
 /**
  * POST — dodanie studenta
  * - parent → tylko student
- * - trainer → student + relacja trainer_student (ZAWSZE)
+ * - trainer → student + relacja trainer_student
  */
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
@@ -105,6 +111,8 @@ export async function POST({ locals, request }) {
   if (profileErr || !profile?.role) {
     return json({ error: 'Brak profilu/roli użytkownika' }, { status: 400 });
   }
+
+  const role = profile.role;
 
   const { first_name, last_name, birth_date } = await request.json();
 
@@ -130,19 +138,16 @@ export async function POST({ locals, request }) {
   }
 
   // 2️⃣ jeśli trener -> relacja trainer_student
-  if (profile.role === 'trainer') {
+  if (role === 'trainer') {
     const { error: relationErr } = await supabase
       .from('trainer_student')
-      .upsert(
-        {
-          trainer_id: user.id, // ✅ profiles.id
-          student_id: student.id
-        },
-        { onConflict: 'trainer_id,student_id' }
-      );
+      .insert({
+        trainer_id: user.id, // ✅ profiles.id
+        student_id: student.id
+      });
 
     if (relationErr) {
-      console.error('trainer_student upsert error:', relationErr);
+      console.error('trainer_student insert error:', relationErr);
       return json(
         {
           error:

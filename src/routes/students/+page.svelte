@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
 
     // ➕ dodawanie
     let first_name = '';
@@ -209,13 +210,30 @@
                         <!-- 👤 PODGLĄD -->
                         <div class="flex justify-between items-center">
                             <div>
-                                <strong>{s.first_name} {s.last_name}</strong>
+                                <!-- ✅ klik w imię/nazwisko -->
+                                <button
+                                    type="button"
+                                    class="font-semibold text-left hover:underline"
+                                    on:click={() => goto(`/students/${s.id}`)}
+                                >
+                                    {s.first_name} {s.last_name}
+                                </button>
+
                                 <div class="text-sm text-gray-500">
                                     {new Date(s.birth_date).toLocaleDateString()}
                                 </div>
                             </div>
 
                             <div class="flex gap-3">
+                                <!-- ✅ nowy przycisk -->
+                                <button
+                                    type="button"
+                                    class="text-indigo-600 text-sm hover:underline"
+                                    on:click={() => goto(`/students/${s.id}`)}
+                                >
+                                    Profil
+                                </button>
+
                                 <button
                                     type="button"
                                     class="text-blue-600 text-sm hover:underline"

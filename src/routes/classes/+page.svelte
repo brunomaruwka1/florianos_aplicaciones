@@ -330,7 +330,7 @@
                 <div class="border-b" style="height:{HOUR_HEIGHT}px"></div>
               {/each}
 
-              <!-- ✅ MNIEJSZE KAFELKI -->
+              <!-- ✅ KAFELKI (BEZ EDYTUJ/USUŃ) -->
               {#each getDayClasses(dayIndex) as c}
                 {#if c.start_time}
                   <div
@@ -347,24 +347,6 @@
                     <div class="text-[10px] text-gray-600 leading-tight">
                       {c.start_time} – {safeEnd(c)}
                     </div>
-
-                    <div class="flex gap-2 mt-1 text-[10px]">
-                      <button
-                        class="text-blue-700 hover:underline"
-                        type="button"
-                        on:click={() => startEdit(c)}
-                      >
-                        Edytuj
-                      </button>
-
-                      <button
-                        class="text-red-600 hover:underline"
-                        type="button"
-                        on:click={() => deleteClass(c.id)}
-                      >
-                        Usuń
-                      </button>
-                    </div>
                   </div>
                 {/if}
               {/each}
@@ -377,7 +359,7 @@
     </div>
   </div>
 
-  <!-- LISTA (fallback) -->
+  <!-- LISTA -->
   <div class="bg-white p-6 rounded-2xl shadow border border-gray-200">
     <h2 class="text-xl font-semibold mb-4">Lista zajęć</h2>
 
