@@ -1,16 +1,28 @@
+// src/routes/messages/+page.server.js
 import { redirect } from '@sveltejs/kit';
 
 export async function load({ locals }) {
   const supabase = locals.supabase;
 
-  const session = locals.session;
-  if (!session) throw redirect(303, '/login');
+  // ✅ auth bezpiecznie
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const user = authData?.user;
 
-  const { data: profile } = await supabase
+  if (authErr || !user) {
+    throw redirect(303, '/login');
+  }
+
+  // role
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
+
+  if (profileErr) {
+    // nie blokujemy strony - po prostu brak roli
+    return { role: null };
+  }
 
   return {
     role: profile?.role || null

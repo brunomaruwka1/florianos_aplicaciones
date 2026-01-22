@@ -1,35 +1,66 @@
 import { json } from '@sveltejs/kit';
 
+/**
+ * POST /api/messages/conversation/:conversationId/send
+ * Body: { body }
+ */
 export async function POST({ locals, params, request }) {
   const supabase = locals.supabase;
-  const conversationId = params.conversationId;
+  const { conversationId } = params;
 
+  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
-  if (authErr || !user) return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  if (authErr || !user) {
+    return json({ error: 'Brak autoryzacji' }, { status: 401 });
+  }
 
   const { body } = await request.json();
-  const cleaned = String(body || '').trim();
+  const clean = String(body || '').trim();
 
-  if (!cleaned) return json({ error: 'Pusta wiadomość' }, { status: 400 });
+  if (!clean) {
+    return json({ error: 'Pusta wiadomość' }, { status: 400 });
+  }
 
-  const { data: msg, error } = await supabase
+  // ✅ fetch conversation
+  const { data: conversation, error: convErr } = await supabase
+    .from('conversations')
+    .select('id, trainer_id, other_profile_id')
+    .eq('id', conversationId)
+    .single();
+
+  if (convErr || !conversation) {
+    return json({ error: 'Nie znaleziono rozmowy' }, { status: 404 });
+  }
+
+  // ✅ membership check
+  const isMember =
+    conversation.trainer_id === user.id || conversation.other_profile_id === user.id;
+
+  if (!isMember) {
+    return json({ error: 'Brak dostępu' }, { status: 403 });
+  }
+
+  // ✅ insert message
+  const { data: message, error: msgErr } = await supabase
     .from('messages')
     .insert({
       conversation_id: conversationId,
       sender_id: user.id,
-      body: cleaned
+      body: clean
     })
-    .select()
+    .select('id, conversation_id, sender_id, body, created_at')
     .single();
 
-  if (error) return json({ error: error.message }, { status: 400 });
+  if (msgErr) {
+    return json({ error: msgErr.message }, { status: 400 });
+  }
 
-  // update conversation updated_at
+  // ✅ touch conversation updated_at
   await supabase
     .from('conversations')
     .update({ updated_at: new Date().toISOString() })
     .eq('id', conversationId);
 
-  return json({ message: msg }, { status: 201 });
+  return json({ message }, { status: 201 });
 }
