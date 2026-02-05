@@ -1,12 +1,12 @@
 <script>
-  import { goto } from '$app/navigation';
+  import { goto } from "$app/navigation";
 
   export let data;
 
   let groups = data.groups || [];
-  const role = data.role; // ✅ trainer | student
+  const role = data.role;
 
-  // ✅ trener: dodawanie grup
+  //  trener: dodawanie grup
   let name = "";
   let description = "";
 
@@ -19,10 +19,10 @@
    * -------------------------------------------------- */
 
   async function addGroup() {
-    const res = await fetch('/api/groups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description })
+    const res = await fetch("/api/groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, description }),
     });
 
     const out = await res.json();
@@ -51,9 +51,9 @@
 
   async function saveEdit(groupId) {
     const res = await fetch(`/api/groups/${groupId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: editName, description: editDescription })
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: editName, description: editDescription }),
     });
 
     const out = await res.json();
@@ -63,14 +63,14 @@
       return;
     }
 
-    groups = groups.map(g => g.id === groupId ? out.group : g);
+    groups = groups.map((g) => (g.id === groupId ? out.group : g));
     cancelEditing();
   }
 
   async function deleteGroup(groupId) {
     if (!confirm("Na pewno chcesz usunąć tę grupę?")) return;
 
-    const res = await fetch(`/api/groups/${groupId}`, { method: 'DELETE' });
+    const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
     const out = await res.json();
 
     if (!res.ok) {
@@ -78,22 +78,19 @@
       return;
     }
 
-    groups = groups.filter(g => g.id !== groupId);
+    groups = groups.filter((g) => g.id !== groupId);
   }
 </script>
 
 <div class="max-w-6xl mx-auto px-4 py-10 space-y-8">
-
   <!-- HEADER -->
   <div class="flex items-center justify-between flex-wrap gap-4">
-    <h1 class="text-3xl font-bold">
-      Moje grupy
-    </h1>
+    <h1 class="text-3xl font-bold">Moje grupy</h1>
 
-    {#if role === 'student'}
+    {#if role === "student"}
       <button
         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        on:click={() => goto('/groups/join')}
+        on:click={() => goto("/groups/join")}
       >
         Dołącz tokenem
       </button>
@@ -103,7 +100,7 @@
   <!-- =============================
       STUDENT VIEW
   ============================== -->
-  {#if role === 'student'}
+  {#if role === "student"}
     {#if groups.length === 0}
       <p class="text-gray-600">Nie jesteś jeszcze w żadnej grupie.</p>
     {:else}
@@ -126,16 +123,16 @@
       </div>
     {/if}
 
-  <!-- =============================
+    <!-- =============================
       TRAINER VIEW
   ============================== -->
-  {:else if role === 'trainer'}
-
+  {:else if role === "trainer"}
     <!-- 2-kolumnowy layout -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
       <!-- LEWA KOLUMNA — FORMULARZ -->
-      <div class="bg-white p-6 rounded-2xl shadow border border-gray-200 h-fit sticky top-6">
+      <div
+        class="bg-white p-6 rounded-2xl shadow border border-gray-200 h-fit sticky top-6"
+      >
         <h2 class="text-xl font-semibold mb-4">Dodaj nową grupę</h2>
 
         <form on:submit|preventDefault={addGroup} class="flex flex-col gap-4">
@@ -163,11 +160,9 @@
 
       <!-- PRAWA KOLUMNA — LISTA GRUP -->
       <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-
         {#if groups.length}
           {#each groups as group}
             <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
-
               {#if editingGroupId === group.id}
                 <input
                   bind:value={editName}
@@ -195,7 +190,6 @@
                   </button>
                 </div>
               {:else}
-
                 <h3
                   class="text-lg font-bold mb-1 cursor-pointer text-blue-600 hover:underline"
                   on:click={() => goto(`/groups/${group.id}`)}
@@ -233,21 +227,17 @@
                     Usuń
                   </button>
                 </div>
-
               {/if}
             </div>
           {/each}
         {:else}
           <p class="text-gray-600">Brak grup.</p>
         {/if}
-
       </div>
     </div>
-
   {:else}
     <p class="text-gray-600">
       Brak roli użytkownika – nie można załadować grup.
     </p>
   {/if}
-
 </div>

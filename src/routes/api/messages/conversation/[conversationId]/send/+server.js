@@ -8,7 +8,6 @@ export async function POST({ locals, params, request }) {
   const supabase = locals.supabase;
   const { conversationId } = params;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
   if (authErr || !user) {
@@ -22,7 +21,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'Pusta wiadomość' }, { status: 400 });
   }
 
-  // ✅ fetch conversation
   const { data: conversation, error: convErr } = await supabase
     .from('conversations')
     .select('id, trainer_id, other_profile_id')
@@ -33,7 +31,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'Nie znaleziono rozmowy' }, { status: 404 });
   }
 
-  // ✅ membership check
   const isMember =
     conversation.trainer_id === user.id || conversation.other_profile_id === user.id;
 
@@ -41,7 +38,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'Brak dostępu' }, { status: 403 });
   }
 
-  // ✅ insert message
   const { data: message, error: msgErr } = await supabase
     .from('messages')
     .insert({
@@ -56,7 +52,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: msgErr.message }, { status: 400 });
   }
 
-  // ✅ touch conversation updated_at
   await supabase
     .from('conversations')
     .update({ updated_at: new Date().toISOString() })

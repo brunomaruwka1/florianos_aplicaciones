@@ -40,8 +40,7 @@ export async function load({ locals }) {
       console.error('Trainer groups fetch error:', error);
       groups = [];
     } else {
-      // ✅ filtrujemy null (żeby nie było crasha w Svelte)
-      groups = (data || [])
+        groups = (data || [])
         .map((row) => row.group)
         .filter(Boolean);
     }
@@ -72,7 +71,6 @@ export async function load({ locals }) {
         console.error('Student groups fetch error:', error);
         groups = [];
       } else {
-        // ✅ filtrujemy null (żeby nie było crasha w Svelte)
         groups = (data || [])
           .map((row) => row.group)
           .filter(Boolean);

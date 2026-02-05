@@ -5,10 +5,11 @@ export async function load({ locals }) {
 
   const { data: authData } = await supabase.auth.getUser();
   const user = authData?.user;
-
   if (!user) throw redirect(303, '/login');
 
-  // role
+  // =========================
+  // ROLA
+  // =========================
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -18,20 +19,48 @@ export async function load({ locals }) {
   if (profileErr || !profile) {
     return {
       role: null,
-      weekClasses: []
+      todayClasses: []
     };
   }
 
   const role = profile.role;
 
-  // default
-  let weekClasses = [];
+  // =========================
+  // DZISIAJ → day_of_week
+  // =========================
+  const jsDay = new Date().getDay(); // 0 = niedziela
+  const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1; // 0 = poniedziałek
 
-  /* --------------------------------------------------
-   * STUDENT: zajęcia w tym tygodniu
-   * -------------------------------------------------- */
+  let todayClasses = [];
+
+  // =====================================================
+  // TRENER – wszystkie swoje zajęcia dziś
+  // =====================================================
+  if (role === 'trainer') {
+    const { data } = await supabase
+      .from('classes')
+      .select(`
+        id,
+        start_time,
+        end_time,
+        group:groups (
+          id,
+          name
+        )
+      `)
+      .eq('day_of_week', dayOfWeek)
+      .order('start_time', { ascending: true });
+
+    todayClasses = (data || []).map((c) => ({
+      ...c,
+      canOpenSession: true
+    }));
+  }
+
+  // =====================================================
+  // STUDENT – zajęcia jego grup dziś
+  // =====================================================
   if (role === 'student') {
-    // students.id
     const { data: student } = await supabase
       .from('students')
       .select('id')
@@ -39,8 +68,7 @@ export async function load({ locals }) {
       .single();
 
     if (student?.id) {
-      // classes dla grup studenta
-      const { data: rows, error } = await supabase
+      const { data: rows } = await supabase
         .from('student_groups')
         .select(`
           group:groups (
@@ -50,35 +78,81 @@ export async function load({ locals }) {
               id,
               day_of_week,
               start_time,
-              end_time,
-              created_at
+              end_time
             )
           )
         `)
         .eq('student_id', student.id);
 
-      if (!error && rows) {
-        // spłaszczamy -> lista zajęć
-        weekClasses = rows
-          .flatMap((r) =>
-            (r.group?.classes || []).map((c) => ({
+      todayClasses = (rows || [])
+        .flatMap((r) =>
+          (r.group?.classes || [])
+            .filter((c) => c.day_of_week === dayOfWeek)
+            .map((c) => ({
               ...c,
               group: {
                 id: r.group.id,
                 name: r.group.name
-              }
+              },
+              canOpenSession: false
             }))
+        )
+        .sort((a, b) =>
+          String(a.start_time).localeCompare(String(b.start_time))
+        );
+    }
+  }
+
+  // =====================================================
+  // RODZIC – zajęcia dzieci dziś
+  // =====================================================
+  if (role === 'parent') {
+    const { data: links } = await supabase
+      .from('parent_student')
+      .select('student_id')
+      .eq('parent_id', user.id);
+
+    const studentIds = (links || []).map((l) => l.student_id);
+
+    if (studentIds.length > 0) {
+      const { data: rows } = await supabase
+        .from('student_groups')
+        .select(`
+          student_id,
+          group:groups (
+            id,
+            name,
+            classes (
+              id,
+              day_of_week,
+              start_time,
+              end_time
+            )
           )
-          .sort((a, b) => {
-            if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
-            return String(a.start_time).localeCompare(String(b.start_time));
-          });
-      }
+        `)
+        .in('student_id', studentIds);
+
+      todayClasses = (rows || [])
+        .flatMap((r) =>
+          (r.group?.classes || [])
+            .filter((c) => c.day_of_week === dayOfWeek)
+            .map((c) => ({
+              ...c,
+              group: {
+                id: r.group.id,
+                name: r.group.name
+              },
+              canOpenSession: false
+            }))
+        )
+        .sort((a, b) =>
+          String(a.start_time).localeCompare(String(b.start_time))
+        );
     }
   }
 
   return {
     role,
-    weekClasses
+    todayClasses
   };
 }

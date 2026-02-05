@@ -57,9 +57,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak wymaganych danych' }, { status: 400 });
   }
 
-  /* --------------------------------------------------
-   * 1️⃣ Tworzymy dziecko (students)
-   * -------------------------------------------------- */
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .insert({
@@ -75,10 +72,6 @@ export async function POST({ locals, request }) {
     console.error('Student insert error:', studentErr);
     return json({ error: studentErr.message }, { status: 400 });
   }
-
-  /* --------------------------------------------------
-   * 2️⃣ Tworzymy relację parent_student
-   * -------------------------------------------------- */
   const { error: relationErr } = await supabase
     .from('parent_student')
     .insert({
@@ -88,7 +81,6 @@ export async function POST({ locals, request }) {
 
   if (relationErr) {
     console.error('Parent relation error:', relationErr);
-    // nie cofamy studenta — relacja jest logiczna, nie krytyczna
   }
 
   return json({ child: student }, { status: 201 });

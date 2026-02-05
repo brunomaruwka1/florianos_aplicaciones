@@ -1,3 +1,5 @@
+import { redirect } from '@sveltejs/kit';
+
 export async function load({ locals }) {
   const supabase = locals.supabase;
 
@@ -5,9 +7,17 @@ export async function load({ locals }) {
   const user = authData?.user;
 
   if (!user) {
-    return {
-      children: []
-    };
+    throw redirect(303, '/login');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'parent') {
+    throw redirect(303, '/profile');
   }
 
   const { data, error } = await supabase
@@ -22,7 +32,10 @@ export async function load({ locals }) {
       )
     `)
     .eq('parent_id', user.id)
-    .order('created_at', { foreignTable: 'students', ascending: false });
+    .order('created_at', {
+      foreignTable: 'students',
+      ascending: false
+    });
 
   if (error) {
     console.error('LOAD parent children error:', error);
@@ -31,7 +44,9 @@ export async function load({ locals }) {
     };
   }
 
-  const children = (data || []).map(row => row.student);
+  const children = (data || [])
+    .map(row => row.student)
+    .filter(Boolean);
 
   return {
     children

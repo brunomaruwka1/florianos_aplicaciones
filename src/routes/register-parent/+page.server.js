@@ -1,5 +1,5 @@
-import { redirect, fail } from '@sveltejs/kit';
 import { supabase } from '$lib/supabaseClient';
+import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
   default: async ({ request }) => {
@@ -34,7 +34,6 @@ export const actions = {
       return fail(400, { error: profileErr.message });
     }
 
-    // ✔️ SUKCES → kierujemy do logowania
     throw redirect(303, '/login');
   }
 };

@@ -8,7 +8,6 @@ import { json } from '@sveltejs/kit';
 export async function GET({ locals }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -16,7 +15,6 @@ export async function GET({ locals }) {
     return json({ error: 'Brak autoryzacji' }, { status: 401 });
   }
 
-  // ✅ role
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -55,7 +53,6 @@ export async function GET({ locals }) {
       return json({ error: error.message }, { status: 400 });
     }
 
-    // ✅ spłaszczamy + filtrujemy null
     const students = (data || [])
       .map((row) => row.student)
       .filter(Boolean);
@@ -81,7 +78,6 @@ export async function GET({ locals }) {
     return json({ students: data || [] }, { status: 200 });
   }
 
-  // student nie ma listy studentów
   return json({ students: [] }, { status: 200 });
 }
 
@@ -93,7 +89,6 @@ export async function GET({ locals }) {
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -101,7 +96,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak autoryzacji' }, { status: 401 });
   }
 
-  // ✅ rola
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -120,7 +114,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak wymaganych danych' }, { status: 400 });
   }
 
-  // 1️⃣ student
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .insert({
@@ -137,12 +130,11 @@ export async function POST({ locals, request }) {
     return json({ error: studentErr.message }, { status: 400 });
   }
 
-  // 2️⃣ jeśli trener -> relacja trainer_student
   if (role === 'trainer') {
     const { error: relationErr } = await supabase
       .from('trainer_student')
       .insert({
-        trainer_id: user.id, // ✅ profiles.id
+        trainer_id: user.id, 
         student_id: student.id
       });
 

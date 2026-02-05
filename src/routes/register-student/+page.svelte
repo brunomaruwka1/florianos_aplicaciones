@@ -2,32 +2,68 @@
   export let form;
 </script>
 
-<div class="max-w-md mx-auto mt-16 bg-white p-6 rounded-2xl shadow border">
-  <h1 class="text-2xl font-bold mb-6">Rejestracja</h1>
+<div class="container">
+  <h2>Rejestracja ucznia</h2>
 
-  <form method="POST" class="flex flex-col gap-4">
-    <input
-      name="email"
-      type="email"
-      placeholder="Email"
-      required
-      class="px-4 py-2 border rounded-lg"
-    />
+  <form method="POST">
+    <input name="email" type="email" placeholder="Email" required />
+    <input name="password" type="password" placeholder="Hasło" required />
 
-    <input
-      name="password"
-      type="password"
-      placeholder="Hasło"
-      required
-      class="px-4 py-2 border rounded-lg"
-    />
-
-    <button class="bg-blue-600 text-white py-2 rounded-lg">
-      Dalej
-    </button>
-
-    {#if form?.error}
-      <p class="text-red-600 text-sm">{form.error}</p>
-    {/if}
+    <button type="submit">Dalej</button>
   </form>
+
+  {#if form?.error}
+    <div class="error">{form.error}</div>
+  {/if}
 </div>
+
+<style>
+  .container {
+    max-width: 420px;
+    margin: 50px auto;
+    padding: 25px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+    font-family: sans-serif;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #10b981;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    background: #059669;
+  }
+
+  .error {
+    margin-top: 10px;
+    padding: 12px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+</style>

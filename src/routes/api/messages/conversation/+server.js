@@ -9,7 +9,6 @@ import { json } from '@sveltejs/kit';
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -23,7 +22,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak other_profile_id' }, { status: 400 });
   }
 
-  // ✅ rola
   const { data: myProfile, error: myProfileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -34,7 +32,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak profilu/roli' }, { status: 400 });
   }
 
-  // ✅ determine trainer_id / other_profile_id
   let trainer_id = null;
   let other_id = null;
 

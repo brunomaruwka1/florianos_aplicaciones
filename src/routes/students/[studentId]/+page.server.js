@@ -1,4 +1,4 @@
-import { redirect, error as kitError } from '@sveltejs/kit';
+import { error as kitError, redirect } from '@sveltejs/kit';
 
 export async function load({ locals, params }) {
   const supabase = locals.supabase;
@@ -9,7 +9,6 @@ export async function load({ locals, params }) {
   const studentId = params.studentId;
   if (!studentId) throw kitError(400, 'Brak studentId');
 
-  // ✅ student info
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .select('id, first_name, last_name, birth_date, created_at')
@@ -21,7 +20,6 @@ export async function load({ locals, params }) {
     throw kitError(404, 'Nie znaleziono studenta');
   }
 
-  // ✅ historia sesji (frekwencja + oceny)
   const { data: historyRaw, error: histErr } = await supabase
     .from('class_session_students')
     .select(`

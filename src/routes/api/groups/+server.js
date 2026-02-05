@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function GET({ locals }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -11,7 +10,6 @@ export async function GET({ locals }) {
     return json({ error: 'Musisz być zalogowany' }, { status: 401 });
   }
 
-  // ✅ rola
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -24,9 +22,6 @@ export async function GET({ locals }) {
 
   const role = profile.role;
 
-  /* --------------------------------------------------
-   * TRAINER: group_trainers -> groups
-   * -------------------------------------------------- */
   if (role === 'trainer') {
     const { data, error } = await supabase
       .from('group_trainers')
@@ -43,9 +38,6 @@ export async function GET({ locals }) {
     return json(groups, { status: 200 });
   }
 
-  /* --------------------------------------------------
-   * STUDENT: student_groups -> groups
-   * -------------------------------------------------- */
   if (role === 'student') {
     // student id
     const { data: student, error: studentErr } = await supabase
@@ -76,16 +68,12 @@ export async function GET({ locals }) {
   return json({ error: 'Nieobsługiwana rola użytkownika' }, { status: 400 });
 }
 
-/**
- * POST — dodawanie grupy (tylko trener)
- */
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
 
   const body = await request.json();
   const { name, description } = body;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -93,7 +81,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Musisz być zalogowany' }, { status: 401 });
   }
 
-  // ✅ rola
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -108,7 +95,6 @@ export async function POST({ locals, request }) {
     return json({ error: "Pole 'name' jest wymagane" }, { status: 400 });
   }
 
-  // 1️⃣ group
   const { data: group, error: groupErr } = await supabase
     .from('groups')
     .insert({
@@ -123,7 +109,6 @@ export async function POST({ locals, request }) {
     return json({ error: groupErr.message }, { status: 400 });
   }
 
-  // 2️⃣ group_trainers
   const { error: relErr } = await supabase
     .from('group_trainers')
     .insert({

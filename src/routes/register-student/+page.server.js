@@ -1,4 +1,4 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
   default: async ({ request, locals }) => {
@@ -11,8 +11,6 @@ export const actions = {
     if (!email || !password) {
       return fail(400, { error: 'Uzupełnij dane' });
     }
-
-    // 1️⃣ Auth
     const { data: authData, error: authErr } =
       await supabase.auth.signUp({ email, password });
 
@@ -22,7 +20,6 @@ export const actions = {
 
     const userId = authData.user.id;
 
-    // 2️⃣ Profil
     const { error: profileErr } = await supabase
       .from('profiles')
       .insert({

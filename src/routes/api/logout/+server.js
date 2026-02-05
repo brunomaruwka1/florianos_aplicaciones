@@ -1,4 +1,3 @@
-// src/routes/api/logout/+server.js
 import { json } from "@sveltejs/kit";
 
 export async function POST({ locals, cookies }) {
@@ -11,7 +10,7 @@ export async function POST({ locals, cookies }) {
         return json({ error: error.message }, { status: 400 });
     }
 
-    // Kasujemy ciasteczka
+    // Kasowanie ciasteczek
     cookies.set("sb-access-token", "", {
         path: "/",
         maxAge: 0

@@ -1,28 +1,29 @@
 <script>
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick } from "svelte";
 
   let contacts = [];
   let active = null;
   let loading = true;
-  let error = '';
+  let error = "";
 
-  // conversation
   let conversationId = null;
   let messages = [];
   let messagesLoading = false;
 
-  // send
-  let text = '';
+  let text = "";
   let sending = false;
 
   let messagesBox;
 
+  // mobile state
+  let mobileView = "list"; // "list" | "chat"
+
   async function fetchContacts() {
-    const res = await fetch('/api/messages/contacts');
+    const res = await fetch("/api/messages/contacts");
     const data = await res.json();
 
     if (!res.ok) {
-      error = data.error || 'Błąd';
+      error = data.error || "Błąd";
     } else {
       contacts = data.contacts || [];
     }
@@ -34,17 +35,17 @@
     active = contact;
     messages = [];
     conversationId = null;
+    mobileView = "chat";
 
-    // 1) get/create conversation
-    const res = await fetch('/api/messages/conversation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ other_profile_id: contact.profile_id })
+    const res = await fetch("/api/messages/conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ other_profile_id: contact.profile_id }),
     });
 
     const out = await res.json();
     if (!res.ok) {
-      error = out.error || 'Błąd tworzenia konwersacji';
+      error = out.error || "Błąd tworzenia konwersacji";
       return;
     }
 
@@ -61,7 +62,7 @@
     messagesLoading = false;
 
     if (!res.ok) {
-      error = out.error || 'Błąd pobierania wiadomości';
+      error = out.error || "Błąd pobierania wiadomości";
       return;
     }
 
@@ -72,27 +73,29 @@
   }
 
   async function sendMessage() {
-    error = '';
     const body = text.trim();
     if (!body || !conversationId) return;
 
     sending = true;
 
-    const res = await fetch(`/api/messages/conversation/${conversationId}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body })
-    });
+    const res = await fetch(
+      `/api/messages/conversation/${conversationId}/send`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      },
+    );
 
     const out = await res.json();
     sending = false;
 
     if (!res.ok) {
-      error = out.error || 'Błąd wysyłania';
+      error = out.error || "Błąd wysyłania";
       return;
     }
 
-    text = '';
+    text = "";
     messages = [...messages, out.message];
 
     await tick();
@@ -100,7 +103,7 @@
   }
 
   function onKeydown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -109,13 +112,17 @@
   onMount(fetchContacts);
 </script>
 
-<div class="max-w-7xl mx-auto h-[80vh] mt-10 bg-white border rounded-2xl shadow flex overflow-hidden">
-
-  <!-- ===== LEWA KOLUMNA ===== -->
-  <div class="w-80 border-r bg-gray-50 flex flex-col">
-    <div class="p-4 font-bold border-b">
-      Wiadomości
-    </div>
+<div
+  class="max-w-7xl mx-auto h-[80vh] mt-10 bg-white border rounded-2xl shadow flex overflow-hidden"
+>
+  <!-- ===== LEWA KOLUMNA (KONTAKTY) ===== -->
+  <div
+    class="
+      w-full sm:w-80 border-r bg-gray-50 flex flex-col
+      {mobileView === 'chat' ? 'hidden sm:flex' : ''}
+    "
+  >
+    <div class="p-4 font-bold border-b">Wiadomości</div>
 
     {#if loading}
       <p class="p-4 text-sm text-gray-500">Ładowanie…</p>
@@ -129,11 +136,9 @@
               {active?.profile_id === c.profile_id ? 'bg-gray-200' : ''}"
             on:click={() => openConversation(c)}
           >
-            <div class="font-semibold text-sm">
-              {c.label}
-            </div>
+            <div class="font-semibold text-sm">{c.label}</div>
             <div class="text-xs text-gray-500">
-              {c.type === 'student' ? 'Uczeń' : 'Rodzic'}
+              {c.type === "student" ? "Uczeń" : "Rodzic"}
             </div>
           </li>
         {/each}
@@ -141,18 +146,29 @@
     {/if}
   </div>
 
-  <!-- ===== PRAWA KOLUMNA ===== -->
-  <div class="flex-1 flex flex-col">
-
+  <!-- ===== PRAWA KOLUMNA (CHAT) ===== -->
+  <div
+    class="
+      flex-1 flex flex-col
+      {mobileView === 'list' ? 'hidden sm:flex' : ''}
+    "
+  >
     {#if !active}
       <div class="flex-1 flex items-center justify-center text-gray-400">
         Wybierz rozmowę
       </div>
-
     {:else}
       <!-- header -->
-      <div class="p-4 border-b font-semibold">
-        {active.label}
+      <div class="p-4 border-b font-semibold flex items-center gap-3">
+        <!-- 📱 BACK -->
+        <button
+          class="sm:hidden text-blue-600"
+          on:click={() => (mobileView = "list")}
+        >
+          ←
+        </button>
+
+        <span class="truncate">{active.label}</span>
       </div>
 
       <!-- messages -->
@@ -160,7 +176,7 @@
         {#if messagesLoading}
           <p class="text-sm text-gray-400">Ładowanie wiadomości…</p>
         {:else if messages.length === 0}
-          <p class="text-sm text-gray-400">Brak wiadomości — napisz pierwszą ✅</p>
+          <p class="text-sm text-gray-400">Brak wiadomości — napisz pierwszą</p>
         {:else}
           <div class="space-y-2">
             {#each messages as m}
@@ -190,7 +206,7 @@
           disabled={sending || !text.trim()}
           on:click={sendMessage}
         >
-          {sending ? 'Wysyłanie…' : 'Wyślij'}
+          {sending ? "Wysyłanie…" : "Wyślij"}
         </button>
 
         {#if error}
@@ -198,6 +214,5 @@
         {/if}
       </div>
     {/if}
-
   </div>
 </div>

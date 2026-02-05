@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
 
-  // 1️⃣ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -14,7 +13,6 @@ export async function POST({ locals, request }) {
   const { token } = await request.json();
   if (!token) return json({ error: 'Brak tokenu' }, { status: 400 });
 
-  // 2️⃣ student.id
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .select('id')
@@ -25,7 +23,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak rekordu studenta' }, { status: 400 });
   }
 
-  // 3️⃣ invite
   const { data: invite, error: inviteErr } = await supabase
     .from('group_invites')
     .select('id, group_id, trainer_id, status, expires_at')
@@ -44,7 +41,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Token wygasł' }, { status: 400 });
   }
 
-  // 4️⃣ join group
   const { error: joinErr } = await supabase
     .from('student_groups')
     .insert({
@@ -56,7 +52,6 @@ export async function POST({ locals, request }) {
     return json({ error: joinErr.message }, { status: 400 });
   }
 
-  // 5️⃣ trainer_student
   const { error: tsErr } = await supabase
     .from('trainer_student')
     .insert({
@@ -68,7 +63,6 @@ export async function POST({ locals, request }) {
     return json({ error: tsErr.message }, { status: 400 });
   }
 
-  // 6️⃣ mark invite accepted
   const { error: updErr } = await supabase
     .from('group_invites')
     .update({ status: 'accepted' })

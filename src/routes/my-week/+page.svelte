@@ -1,5 +1,5 @@
 <script>
-  import { goto } from '$app/navigation';
+  import { goto } from "$app/navigation";
 
   export let data;
 
@@ -10,10 +10,9 @@
     "Czwartek",
     "Piątek",
     "Sobota",
-    "Niedziela"
+    "Niedziela",
   ];
 
-  // ✅ reaktywnie
   $: classes = data.classes || [];
 
   /* =========================
@@ -23,7 +22,7 @@
   // ISO YYYY-MM-DD -> Date (LOCAL time)
   function dateFromISO(iso) {
     if (!iso) return null;
-    const [y, m, d] = iso.split('-').map(Number);
+    const [y, m, d] = iso.split("-").map(Number);
     if (!y || !m || !d) return null;
     return new Date(y, m - 1, d, 12, 0, 0); // 12:00 => brak cofania dnia
   }
@@ -31,8 +30,8 @@
   // Date -> ISO YYYY-MM-DD (LOCAL time)
   function toISODateLocal(date) {
     const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
 
@@ -45,7 +44,6 @@
     return d;
   }
 
-  // ✅ tydzień sterowany przez loadera
   $: weekStart = getMonday(dateFromISO(data.week) || new Date());
 
   function dateForDayIndex(dayIndex) {
@@ -61,7 +59,7 @@
 
   function prevWeek() {
     const d = new Date(weekStart);
-    d.setDate(d.getDate() - 7); // ✅ -7 dni
+    d.setDate(d.getDate() - 7); //
 
     const weekISO = toISODateLocal(getMonday(d));
     goto(`/my-week?week=${weekISO}`);
@@ -69,7 +67,7 @@
 
   function nextWeek() {
     const d = new Date(weekStart);
-    d.setDate(d.getDate() + 7); // ✅ +7 dni
+    d.setDate(d.getDate() + 7); //
 
     const weekISO = toISODateLocal(getMonday(d));
     goto(`/my-week?week=${weekISO}`);
@@ -80,7 +78,7 @@
    * ========================= */
 
   function formatTime(t) {
-    if (!t) return '';
+    if (!t) return "";
     return String(t).slice(0, 5);
   }
 
@@ -95,37 +93,38 @@
    * ========================= */
 
   let loadingId = null;
-  let error = '';
+  let error = "";
 
   async function openSession(cls) {
-    error = '';
+    error = "";
     loadingId = cls.id;
 
-    // ✅ data dla zajęć w tym tygodniu
-    const session_date = toISODateLocal(dateForDayIndex(Number(cls.day_of_week)));
+    const session_date = toISODateLocal(
+      dateForDayIndex(Number(cls.day_of_week)),
+    );
 
-    const res = await fetch('/api/class-sessions/open', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/class-sessions/open", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         class_id: cls.id,
-        session_date
-      })
+        session_date,
+      }),
     });
 
     const out = await res.json();
     loadingId = null;
 
     if (!res.ok) {
-      error = out.error || 'Błąd tworzenia sesji';
+      error = out.error || "Błąd tworzenia sesji";
       return;
     }
 
     const sessionId = out?.session?.id;
 
     if (!sessionId) {
-      error = 'Backend nie zwrócił session.id';
-      console.log('OPEN SESSION RESPONSE:', out);
+      error = "Backend nie zwrócił session.id";
+      console.log("OPEN SESSION RESPONSE:", out);
       return;
     }
 
@@ -134,7 +133,6 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-10 space-y-8">
-
   <!-- HEADER -->
   <div class="flex items-start justify-between flex-wrap gap-4">
     <div>
@@ -169,15 +167,16 @@
     <p class="text-red-600 text-sm">{error}</p>
   {/if}
 
-  <!-- ✅ key = wymusza refresh kafelków po zmianie tygodnia -->
+  <!-- key = wymusza refresh kafelków po zmianie tygodnia -->
   {#key data.week}
     <!-- LISTA DNI -->
     <div class="space-y-5">
       {#each days as day, dayIndex}
         <div class="bg-white border rounded-2xl shadow-sm overflow-hidden">
-
           <!-- nagłówek dnia -->
-          <div class="flex items-center justify-between gap-4 px-6 py-4 border-b bg-gray-50">
+          <div
+            class="flex items-center justify-between gap-4 px-6 py-4 border-b bg-gray-50"
+          >
             <div>
               <h2 class="text-lg font-semibold">{day}</h2>
               <p class="text-sm text-gray-500">
@@ -208,11 +207,13 @@
                   >
                     <div class="min-w-0">
                       <div class="font-semibold text-base truncate">
-                        {cls.group?.name || 'Grupa'}
+                        {cls.group?.name || "Grupa"}
                       </div>
 
                       <div class="text-sm text-gray-600 mt-1">
-                        {formatTime(cls.start_time)} – {formatTime(cls.end_time)}
+                        {formatTime(cls.start_time)} – {formatTime(
+                          cls.end_time,
+                        )}
                       </div>
 
                       {#if loadingId === cls.id}
@@ -223,7 +224,9 @@
                     </div>
 
                     <div class="shrink-0">
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"
+                      >
                         Otwórz sesję →
                       </span>
                     </div>
@@ -232,10 +235,8 @@
               </div>
             {/if}
           </div>
-
         </div>
       {/each}
     </div>
   {/key}
-
 </div>

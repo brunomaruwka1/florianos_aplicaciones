@@ -1,33 +1,29 @@
 <script>
-    import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
+    import { goto } from "$app/navigation";
+    import { onMount } from "svelte";
 
-    // ➕ dodawanie
-    let first_name = '';
-    let last_name = '';
-    let birth_date = '';
-    let error = '';
+    let first_name = "";
+    let last_name = "";
+    let birth_date = "";
+    let error = "";
 
-    // 📋 lista
     let students = [];
     let loading = true;
 
-    // ✏️ edycja
     let editingStudentId = null;
-    let editFirstName = '';
-    let editLastName = '';
-    let editBirthDate = '';
+    let editFirstName = "";
+    let editLastName = "";
+    let editBirthDate = "";
 
-    // 📥 LOAD
     async function loadStudents() {
         loading = true;
-        error = '';
+        error = "";
 
-        const res = await fetch('/api/students');
+        const res = await fetch("/api/students");
         const data = await res.json();
 
         if (!res.ok) {
-            error = data.error || 'Błąd pobierania studentów';
+            error = data.error || "Błąd pobierania studentów";
         } else {
             students = data.students || [];
         }
@@ -35,35 +31,33 @@
         loading = false;
     }
 
-    // ➕ ADD
     async function addStudent() {
-        error = '';
+        error = "";
 
-        const res = await fetch('/api/students', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/students", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 first_name,
                 last_name,
-                birth_date
-            })
+                birth_date,
+            }),
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            error = data.error || 'Błąd podczas dodawania';
+            error = data.error || "Błąd podczas dodawania";
             return;
         }
 
-        first_name = '';
-        last_name = '';
-        birth_date = '';
+        first_name = "";
+        last_name = "";
+        birth_date = "";
 
         await loadStudents();
     }
 
-    // ✏️ START EDIT
     function startEdit(student) {
         editingStudentId = student.id;
         editFirstName = student.first_name;
@@ -75,22 +69,21 @@
         editingStudentId = null;
     }
 
-    // 💾 SAVE EDIT
     async function saveEdit(studentId) {
         const res = await fetch(`/api/students/${studentId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 first_name: editFirstName,
                 last_name: editLastName,
-                birth_date: editBirthDate
-            })
+                birth_date: editBirthDate,
+            }),
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            error = data.error || 'Błąd edycji';
+            error = data.error || "Błąd edycji";
             return;
         }
 
@@ -98,18 +91,17 @@
         await loadStudents();
     }
 
-    // ❌ DELETE
     async function deleteStudent(studentId) {
-        if (!confirm('Na pewno usunąć podopiecznego?')) return;
+        if (!confirm("Na pewno usunąć podopiecznego?")) return;
 
         const res = await fetch(`/api/students/${studentId}`, {
-            method: 'DELETE'
+            method: "DELETE",
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            error = data.error || 'Błąd usuwania';
+            error = data.error || "Błąd usuwania";
             return;
         }
 
@@ -120,13 +112,12 @@
 </script>
 
 <div class="max-w-xl mx-auto mt-16 bg-white p-6 rounded-2xl shadow border">
+    <h1 class="text-2xl font-bold mb-6">Podopieczni</h1>
 
-    <h1 class="text-2xl font-bold mb-6">
-        Podopieczni
-    </h1>
-
-    <!-- ➕ DODAWANIE -->
-    <form on:submit|preventDefault={addStudent} class="flex flex-col gap-4 mb-8">
+    <form
+        on:submit|preventDefault={addStudent}
+        class="flex flex-col gap-4 mb-8"
+    >
         <input
             bind:value={first_name}
             placeholder="Imię"
@@ -157,10 +148,7 @@
         {/if}
     </form>
 
-    <!-- 📋 LISTA -->
-    <h2 class="text-xl font-semibold mb-3">
-        Lista podopiecznych
-    </h2>
+    <h2 class="text-xl font-semibold mb-3">Lista podopiecznych</h2>
 
     {#if loading}
         <p>Ładowanie…</p>
@@ -170,9 +158,7 @@
         <ul class="space-y-3">
             {#each students as s}
                 <li class="p-4 border rounded-xl">
-
                     {#if editingStudentId === s.id}
-                        <!-- ✏️ EDYCJA -->
                         <div class="flex flex-col gap-2">
                             <input
                                 bind:value={editFirstName}
@@ -205,27 +191,27 @@
                                 </button>
                             </div>
                         </div>
-
                     {:else}
                         <!-- 👤 PODGLĄD -->
                         <div class="flex justify-between items-center">
                             <div>
-                                <!-- ✅ klik w imię/nazwisko -->
                                 <button
                                     type="button"
                                     class="font-semibold text-left hover:underline"
                                     on:click={() => goto(`/students/${s.id}`)}
                                 >
-                                    {s.first_name} {s.last_name}
+                                    {s.first_name}
+                                    {s.last_name}
                                 </button>
 
                                 <div class="text-sm text-gray-500">
-                                    {new Date(s.birth_date).toLocaleDateString()}
+                                    {new Date(
+                                        s.birth_date,
+                                    ).toLocaleDateString()}
                                 </div>
                             </div>
 
                             <div class="flex gap-3">
-                                <!-- ✅ nowy przycisk -->
                                 <button
                                     type="button"
                                     class="text-indigo-600 text-sm hover:underline"
@@ -251,7 +237,6 @@
                             </div>
                         </div>
                     {/if}
-
                 </li>
             {/each}
         </ul>

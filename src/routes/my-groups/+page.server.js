@@ -8,7 +8,6 @@ export async function load({ locals }) {
 
   const userId = session.user.id;
 
-  // ✅ role
   const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('role')
@@ -31,7 +30,6 @@ export async function load({ locals }) {
     throw redirect(303, '/groups');
   }
 
-  // ✅ students.id
   const { data: student, error: studentErr } = await supabase
     .from('students')
     .select('id, first_name, last_name')
@@ -48,7 +46,6 @@ export async function load({ locals }) {
     };
   }
 
-  // ✅ student_groups records (dopasowane do Twojej tabeli)
   const { data: studentGroupsRaw, error: sgErr } = await supabase
     .from('student_groups')
     .select(`

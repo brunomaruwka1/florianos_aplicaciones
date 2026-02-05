@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function POST({ locals, params }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -17,7 +16,6 @@ export async function POST({ locals, params }) {
     return json({ error: 'Brak sessionId' }, { status: 400 });
   }
 
-  // ✅ finish session
   const { data: updated, error } = await supabase
     .from('class_sessions')
     .update({
@@ -25,7 +23,7 @@ export async function POST({ locals, params }) {
       finished_at: new Date().toISOString()
     })
     .eq('id', sessionId)
-    .eq('status', 'open') // zabezpieczenie
+    .eq('status', 'open') 
     .select()
     .single();
 

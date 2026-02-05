@@ -6,9 +6,17 @@ export const handle = async ({ event, resolve }) => {
     import.meta.env.VITE_SUPABASE_ANON_KEY,
     {
       cookies: {
-        get: (key) => event.cookies.get(key),
-        set: (key, value, options) => event.cookies.set(key, value, { ...options, path: '/' }),
-        remove: (key, options) => event.cookies.delete(key, { ...options, path: '/' })
+        getAll: () => event.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            event.cookies.set(name, value, {
+              ...options,
+              path: '/',
+              sameSite: 'lax', // 👈 ważne dla network IP
+              secure: false    // 👈 HTTP w DEV
+            });
+          });
+        }
       }
     }
   );

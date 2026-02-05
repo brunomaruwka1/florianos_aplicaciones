@@ -2,73 +2,69 @@
   export let form;
 </script>
 
-<div class="container">
-  <h2>Rejestracja rodzica</h2>
+<div
+  class="m-20 mx-auto w-full max-w-md bg-white shadow-lg rounded-2xl p-8 border border-gray-200"
+>
+  <h1 class="text-2xl font-bold mb-2 text-center">Rejestracja rodzica</h1>
+  <p class="text-gray-600 text-center mb-6">Utwórz konto rodzica</p>
 
-  <form method="POST">
-    <input name="email" type="email" placeholder="Email" required />
+  <form method="POST" class="flex flex-col gap-4">
+    <div>
+      <label class="block mb-1 font-medium">Email</label>
+      <input
+        type="email"
+        name="email"
+        required
+        class="w-full px-4 py-2 border rounded-lg
+               focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
 
-    <input name="password" type="password" placeholder="Hasło" required />
+    <div>
+      <label class="block mb-1 font-medium">Hasło</label>
+      <input
+        type="password"
+        name="password"
+        required
+        class="w-full px-4 py-2 border rounded-lg
+               focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
 
-    <input name="first_name" type="text" placeholder="Imię" required />
+    <div>
+      <label class="block mb-1 font-medium">Imię</label>
+      <input
+        type="text"
+        name="first_name"
+        required
+        class="w-full px-4 py-2 border rounded-lg
+               focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
 
-    <input name="last_name" type="text" placeholder="Nazwisko" required />
+    <div>
+      <label class="block mb-1 font-medium">Nazwisko</label>
+      <input
+        type="text"
+        name="last_name"
+        required
+        class="w-full px-4 py-2 border rounded-lg
+               focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      />
+    </div>
 
-    <button type="submit">Utwórz konto rodzica</button>
+    {#if form?.error}
+      <p class="text-red-600 bg-red-100 px-3 py-2 rounded-lg text-sm">
+        {form.error}
+      </p>
+    {/if}
+
+    <button
+      type="submit"
+      class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg
+             hover:bg-blue-700 transition"
+    >
+      Utwórz konto rodzica
+    </button>
   </form>
-
-  {#if form?.error}
-    <div class="error">{form.error}</div>
-  {/if}
 </div>
-
-<style>
-  .container {
-    max-width: 420px;
-    margin: 50px auto;
-    padding: 25px;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
-    font-family: sans-serif;
-  }
-
-  h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  input {
-    width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-  }
-
-  button {
-    width: 100%;
-    padding: 12px;
-    background: #10b981;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-
-  button:hover {
-    background: #059669;
-  }
-
-  .error {
-    margin-top: 10px;
-    padding: 12px;
-    background: #fee2e2;
-    color: #b91c1c;
-    border-radius: 8px;
-    font-size: 14px;
-    text-align: center;
-  }
-</style>

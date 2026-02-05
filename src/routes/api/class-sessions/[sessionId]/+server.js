@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function GET({ locals, params }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -17,7 +16,6 @@ export async function GET({ locals, params }) {
     return json({ error: 'Brak sessionId' }, { status: 400 });
   }
 
-  // 1) session
   const { data: session, error: sessionErr } = await supabase
     .from('class_sessions')
     .select(`
@@ -40,7 +38,6 @@ export async function GET({ locals, params }) {
     return json({ error: sessionErr?.message || 'Nie znaleziono sesji' }, { status: 400 });
   }
 
-  // 2) students
   const { data: rows, error: studentsErr } = await supabase
     .from('class_session_students')
     .select(`
@@ -77,7 +74,6 @@ export async function GET({ locals, params }) {
 export async function PATCH({ locals, params, request }) {
   const supabase = locals.supabase;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 

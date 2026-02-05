@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function POST({ locals, request }) {
   const supabase = locals.supabase;
 
-  // 1) auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -17,7 +16,6 @@ export async function POST({ locals, request }) {
     return json({ error: 'Brak class_id lub session_date' }, { status: 400 });
   }
 
-  // 2) pobierz class (żeby znać group_id i godziny)
   const { data: cls, error: clsErr } = await supabase
     .from('classes')
     .select('id, group_id, start_time, end_time')
@@ -28,7 +26,6 @@ export async function POST({ locals, request }) {
     return json({ error: clsErr?.message || 'Nie znaleziono class' }, { status: 400 });
   }
 
-  // 3) spróbuj znaleźć istniejącą sesję
   const { data: existing, error: existErr } = await supabase
     .from('class_sessions')
     .select('*')
@@ -42,7 +39,6 @@ export async function POST({ locals, request }) {
 
   let session = existing;
 
-  // 4) jeśli nie ma — tworzymy
   if (!session) {
     const { data: created, error: createErr } = await supabase
       .from('class_sessions')
@@ -64,8 +60,6 @@ export async function POST({ locals, request }) {
     session = created;
   }
 
-  // 5) tworzymy wpisy w class_session_students (dla wszystkich studentów w grupie)
-  // pobierz studentów w grupie
   const { data: groupStudents, error: gsErr } = await supabase
     .from('student_groups')
     .select('student_id')
@@ -75,7 +69,6 @@ export async function POST({ locals, request }) {
     return json({ error: gsErr.message }, { status: 400 });
   }
 
-  // bulk upsert rekordów do sesji
   const toInsert = (groupStudents || []).map((row) => ({
     session_id: session.id,
     student_id: row.student_id
@@ -91,6 +84,5 @@ export async function POST({ locals, request }) {
     }
   }
 
-  // ✅ NAJWAŻNIEJSZE: zwracamy zawsze { session }
   return json({ session }, { status: 200 });
 }

@@ -3,7 +3,6 @@ import { json } from '@sveltejs/kit';
 export async function POST({ locals, params, request }) {
   const supabase = locals.supabase;
 
-  // 1) auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -23,7 +22,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'Brak tokenu' }, { status: 400 });
   }
 
-  // 2) czy dziecko jest powiązane z rodzicem?
   const { data: link, error: linkErr } = await supabase
     .from('parent_student')
     .select('student_id')
@@ -39,7 +37,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'To dziecko nie należy do tego rodzica' }, { status: 403 });
   }
 
-  // 3) pobierz invite
   const { data: invite, error: inviteErr } = await supabase
     .from('group_invites')
     .select('id, group_id, trainer_id, status, expires_at')
@@ -54,12 +51,10 @@ export async function POST({ locals, params, request }) {
     return json({ error: 'Token został już użyty' }, { status: 400 });
   }
 
-  // (opcjonalnie expiry)
   if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
     return json({ error: 'Token wygasł' }, { status: 400 });
   }
 
-  // 4) update token -> accepted
   const { error: updErr } = await supabase
     .from('group_invites')
     .update({ status: 'accepted' })
@@ -70,7 +65,6 @@ export async function POST({ locals, params, request }) {
     return json({ error: updErr.message }, { status: 400 });
   }
 
-  // 5) join group (student_groups)
   const { error: joinErr } = await supabase
     .from('student_groups')
     .insert({
@@ -82,11 +76,10 @@ export async function POST({ locals, params, request }) {
     return json({ error: joinErr.message }, { status: 400 });
   }
 
-  // 6) trainer_student relacja
   const { error: tsErr } = await supabase
     .from('trainer_student')
     .insert({
-      trainer_id: invite.trainer_id, // UWAGA: tu musi być to samo co w FK
+      trainer_id: invite.trainer_id, 
       student_id: childId
     });
 

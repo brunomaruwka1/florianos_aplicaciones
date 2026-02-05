@@ -45,7 +45,6 @@ export async function load({ locals, url }) {
     throw redirect(303, '/groups');
   }
 
-  // ✅ tydzień z URL
   const weekParam = url.searchParams.get('week');
   const parsed = dateFromISO(weekParam);
   const weekStart = getMonday(parsed || new Date());

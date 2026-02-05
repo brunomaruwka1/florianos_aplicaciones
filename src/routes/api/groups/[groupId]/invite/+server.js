@@ -5,7 +5,6 @@ export async function POST({ locals, params }) {
   const supabase = locals.supabase;
   const groupId = params.groupId;
 
-  // ✅ auth
   const { data: authData, error: authErr } = await supabase.auth.getUser();
   const user = authData?.user;
 
@@ -13,7 +12,6 @@ export async function POST({ locals, params }) {
     return json({ error: 'Brak autoryzacji' }, { status: 401 });
   }
 
-  // 🔐 sprawdzimy dodatkowo czy trener jest w tej grupie (czytelny error)
   const { data: membership, error: memberErr } = await supabase
     .from('group_trainers')
     .select('group_id')
@@ -34,7 +32,6 @@ export async function POST({ locals, params }) {
 
   const token = crypto.randomBytes(24).toString('hex');
 
-  // ✅ trainer_id = auth.uid() = profiles.id
   const { data: invite, error: inviteErr } = await supabase
     .from('group_invites')
     .insert({

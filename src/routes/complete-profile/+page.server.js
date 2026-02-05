@@ -4,7 +4,6 @@ export const actions = {
   default: async ({ request, locals }) => {
     const supabase = locals.supabase;
 
-    // 1️⃣ auth
     const { data: authData, error: authErr } = await supabase.auth.getUser();
     const user = authData?.user;
 
@@ -12,7 +11,6 @@ export const actions = {
       return fail(401, { error: 'Brak autoryzacji' });
     }
 
-    // 2️⃣ formularz
     const formData = await request.formData();
     const first_name = formData.get('first_name');
     const last_name = formData.get('last_name');
@@ -22,7 +20,6 @@ export const actions = {
       return fail(400, { error: 'Uzupełnij wszystkie pola' });
     }
 
-    // 3️⃣ czy student już istnieje?
     const { data: existingStudent, error: checkErr } = await supabase
       .from('students')
       .select('id')
@@ -37,7 +34,6 @@ export const actions = {
       throw redirect(303, '/dashboard');
     }
 
-    // 4️⃣ insert students (AKTYWACJA)
     const { error: studentErr } = await supabase
       .from('students')
       .insert({
@@ -52,7 +48,6 @@ export const actions = {
       return fail(400, { error: studentErr.message });
     }
 
-    // 5️⃣ sukces
     throw redirect(303, '/profile');
   }
 };
